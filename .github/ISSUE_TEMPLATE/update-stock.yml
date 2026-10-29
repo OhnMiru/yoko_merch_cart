@@ -1,0 +1,16 @@
+name: Изменить остаток
+description: Поставить новое количество
+title: "Остаток: "
+body:
+  - type: input
+    attributes:
+      label: Позиция
+      description: Название как в каталоге
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Новое количество
+      description: Только число
+    validations:
+      required: true
