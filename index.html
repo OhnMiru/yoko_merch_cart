@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мерч</title>
+<style>
+:root{--bg:#f3f2f8;--card:#fff;--ink:#1d1b2e;--mute:#6b6880;--line:#dcd9ea;--acc:#6c4bd8;--accbg:#ebe6fb;--heart:#e0457b;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#15131f;--card:#1f1c2d;--ink:#eeecf7;--mute:#9a97b0;--line:#34304a;--acc:#a58cff;--accbg:#2c2548;--heart:#ff6b9a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header,main{max-width:1100px;margin:0 auto;padding:0 16px}
+h1{font-size:clamp(28px,6vw,44px);margin:28px 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+.chip:focus-visible,.heart:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;margin:20px 0 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.pic{aspect-ratio:1;background:var(--accbg);display:grid;place-items:center;color:var(--mute);font-size:14px}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1}
+.name{font-weight:650}
+.meta{color:var(--mute);font-size:14px}
+.price{font-weight:700;margin-top:auto;padding-top:6px}
+.heart{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:0;background:var(--card);color:var(--mute);font-size:20px;cursor:pointer;line-height:1}
+.heart[aria-pressed=true]{color:var(--heart)}
+.out .pic,.out .body{filter:grayscale(1);opacity:.5}
+.badge{position:absolute;left:8px;top:8px;background:var(--ink);color:var(--bg);font-size:13px;border-radius:999px;padding:3px 10px}
+.empty{color:var(--mute);padding:40px 0;text-align:center;grid-column:1/-1}
+</style>
+</head>
+<body>
+<header>
+  <h1>Мерч</h1>
+  <p class="sub">Нажмите на сердечко, чтобы запомнить понравившееся. Избранное хранится в вашем браузере.</p>
+  <div class="chips" id="fandoms" aria-label="Фандом"></div>
+  <div class="chips" id="types" aria-label="Вид"></div>
+</header>
+<main><div class="grid" id="grid"></div></main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let items = [], fav = new Set(), flt = {fandom:'', type:'', fav:false};
+try { fav = new Set(JSON.parse(localStorage.getItem('fav') || '[]')); } catch (e) {}
+const saveFav = () => { try { localStorage.setItem('fav', JSON.stringify([...fav])); } catch (e) {} };
+
+function chips(el, key, values, extra) {
+  const all = [['', 'Все'], ...values.map(v => [v, v])];
+  el.innerHTML = all.map(([v, t]) => `<button class="chip" data-k="${key}" data-v="${esc(v)}" aria-pressed="${flt[key] === v}">${esc(t)}</button>`).join('') + (extra || '');
+}
+function draw() {
+  const uniq = k => [...new Set(items.map(i => i[k]).filter(Boolean))].sort();
+  chips($('#fandoms'), 'fandom', uniq('fandom'));
+  chips($('#types'), 'type', uniq('type'), `<button class="chip" id="favBtn" aria-pressed="${flt.fav}">♥ Избранное</button>`);
+  const list = items.filter(i => (!flt.fandom || i.fandom === flt.fandom) && (!flt.type || i.type === flt.type) && (!flt.fav || fav.has(i.id)));
+  list.sort((a, b) => (b.qty > 0) - (a.qty > 0));
+  $('#grid').innerHTML = list.length ? list.map(i => `
+    <article class="card ${i.qty > 0 ? '' : 'out'}">
+      <div class="pic">${i.image ? `<img src="${esc(i.image)}" alt="${esc(i.name)}" loading="lazy">` : 'Нет фото'}</div>
+      ${i.qty > 0 ? '' : '<span class="badge">Нет в наличии</span>'}
+      <div class="body">
+        <div class="name">${esc(i.name)}</div>
+        <div class="meta">${esc(i.fandom)} · ${esc(i.type)}</div>
+        ${i.size ? `<div class="meta">Размер: ${esc(i.size)}</div>` : ''}
+        ${i.material ? `<div class="meta">Материал: ${esc(i.material)}</div>` : ''}
+        <div class="price">${esc(i.price)} ₽</div>
+      </div>
+      <button class="heart" data-id="${esc(i.id)}" aria-pressed="${fav.has(i.id)}" aria-label="В избранное">${fav.has(i.id) ? '♥' : '♡'}</button>
+    </article>`).join('') : `<p class="empty">${flt.fav ? 'В избранном пока пусто.' : 'Здесь пока ничего нет.'}</p>`;
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest('.chip'), h = e.target.closest('.heart');
+  if (c) { if (c.id === 'favBtn') flt.fav = !flt.fav; else flt[c.dataset.k] = c.dataset.v; draw(); }
+  if (h) { const id = h.dataset.id; fav.has(id) ? fav.delete(id) : fav.add(id); saveFav(); draw(); }
+});
+fetch('items.json?t=' + Date.now()).then(r => r.json()).then(d => { items = d.items || []; draw(); })
+  .catch(() => { $('#grid').innerHTML = '<p class="empty">Не удалось загрузить каталог. Обновите страницу.</p>'; });
+</script>
+</body>
+</html>
