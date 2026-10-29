@@ -15,7 +15,7 @@ body:
   - type: dropdown
     attributes:
       label: Вид
-      options: [Стикеры, Значки, Принты, Другое]
+      options: [Стикеры, Стикерпаки, Карточки, Открытки, Значки, Брелки, Стенды, Текстиль, Другое]
     validations:
       required: true
   - type: input
@@ -31,6 +31,9 @@ body:
   - type: input
     attributes:
       label: Материал
+  - type: input
+    attributes:
+      label: Пленка
   - type: input
     attributes:
       label: Количество
