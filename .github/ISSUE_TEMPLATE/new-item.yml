@@ -20,12 +20,6 @@ body:
       required: true
   - type: input
     attributes:
-      label: Цена, ₽
-      description: Только число
-    validations:
-      required: true
-  - type: input
-    attributes:
       label: Размеры
       placeholder: 5×5 см
   - type: input
@@ -37,6 +31,12 @@ body:
   - type: input
     attributes:
       label: Количество
+      description: Только число
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Цена, ₽
       description: Только число
     validations:
       required: true
