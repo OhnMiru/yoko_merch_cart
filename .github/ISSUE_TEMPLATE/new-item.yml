@@ -1,0 +1,46 @@
+name: Новая позиция
+description: Добавить мерч в каталог
+title: "Новая позиция: "
+body:
+  - type: input
+    attributes:
+      label: Название
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Фандом
+      description: Пишите одинаково, чтобы фандом не задвоился
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Вид
+      options: [Стикеры, Значки, Принты, Другое]
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Цена, ₽
+      description: Только число
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Размеры
+      placeholder: 5×5 см
+  - type: input
+    attributes:
+      label: Материал
+  - type: input
+    attributes:
+      label: Количество
+      description: Только число
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Картинка
+      description: Перетащите файл в это поле.
+    validations:
+      required: true
