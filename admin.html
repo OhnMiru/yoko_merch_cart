@@ -40,6 +40,7 @@ label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;
 .qty button{width:38px;height:38px;border-radius:50%;border:2px solid var(--lav);background:var(--card);font-size:20px;font-weight:800;cursor:pointer}
 .qty input{text-align:center;width:70px}
 .hint{font-size:13px;color:var(--mute)}
+.hint.err{color:var(--err)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -93,6 +94,124 @@ async function load(){
 
 function el(tag,props,...kids){const e=document.createElement(tag);Object.assign(e,props||{});kids.forEach(k=>e.append(k));return e}
 
+/* ========== ЗАГРУЗКА ФОТО ========== */
+
+// Сжимаем: максимум 1200px по длинной стороне.
+// Если у картинки есть настоящая прозрачность — PNG (для стикеров),
+// иначе WebP q=0.85 (JPEG как фолбэк для старых браузеров).
+async function compressImage(file){
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const MAX = 1200;
+  const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bitmap, 0, 0, w, h);
+
+  // Проверяем реальную прозрачность (сэмплируем каждый ~16-й пиксель)
+  let hasAlpha = false;
+  try {
+    const px = ctx.getImageData(0, 0, w, h).data;
+    for (let i = 3; i < px.length; i += 4 * 16) {
+      if (px[i] < 255) { hasAlpha = true; break; }
+    }
+  } catch (_) { /* CORS-файл из file:// — маловероятно, но на всякий */ }
+
+  const toBlob = (mime, q) => new Promise(res => canvas.toBlob(res, mime, q));
+
+  if (hasAlpha) {
+    // PNG без потерь — сохраняет прозрачность
+    const blob = await toBlob('image/png');
+    return { blob, ext: 'png', mime: 'image/png' };
+  }
+
+  // Пробуем WebP, если браузер не умеет — toBlob вернёт PNG, проверим по mime
+  let blob = await toBlob('image/webp', 0.85);
+  if (blob && blob.type === 'image/webp') {
+    return { blob, ext: 'webp', mime: 'image/webp' };
+  }
+  blob = await toBlob('image/jpeg', 0.88);
+  return { blob, ext: 'jpg', mime: 'image/jpeg' };
+}
+
+// Грузим файл в репо: PUT /contents/images/{id}.{ext}
+// Если файл с таким именем уже есть — перезаписываем (через sha).
+// Старые версии с другим расширением (например .jpg при новом .webp) не удаляем —
+// это не критично, но можно добавить очистку отдельно.
+async function uploadImage(file, itemId){
+  const { blob, ext } = await compressImage(file);
+  const path = `images/${itemId}.${ext}`;
+
+  const buf = new Uint8Array(await blob.arrayBuffer());
+  let bin = '';
+  for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+  const b64 = btoa(bin);
+
+  // Узнаём sha, если файл уже существует (перезапись)
+  let fileSha;
+  const head = await fetch(`${API}/contents/${path}?ref=${BRANCH}`, { headers: hdr(), cache: 'no-store' });
+  if (head.ok) {
+    const j = await head.json();
+    fileSha = j.sha;
+  } else if (head.status !== 404) {
+    throw new Error('Проверка файла: ' + head.status);
+  }
+
+  const r = await fetch(`${API}/contents/${path}`, {
+    method: 'PUT',
+    headers: { ...hdr(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: `Фото: ${path}`,
+      content: b64,
+      branch: BRANCH,
+      ...(fileSha ? { sha: fileSha } : {})
+    })
+  });
+  if (r.status === 401 || r.status === 403) {
+    throw new Error('Нет права записи (Contents: Read and write).');
+  }
+  if (!r.ok) throw new Error('Загрузка фото: ' + r.status);
+
+  return path;
+}
+
+// Поле выбора файла + превью + статус
+function imageField(item, thumbEl){
+  const wrap = el('label', { className: 'w' }, 'Фото');
+  const fileInp = el('input', { type: 'file', accept: 'image/*' });
+  const status = el('span', { className: 'hint' },
+    item.image ? 'Текущее: ' + item.image : 'Нет фото');
+
+  fileInp.addEventListener('change', async () => {
+    const f = fileInp.files && fileInp.files[0];
+    if (!f) return;
+    fileInp.disabled = true;
+    status.className = 'hint';
+    status.textContent = 'Сжимаю и загружаю…';
+    try {
+      const path = await uploadImage(f, item.id);
+      item.image = path;
+      setDirty(true);
+      if (thumbEl) thumbEl.src = path;
+      status.textContent = 'Загружено: ' + path;
+    } catch (e) {
+      status.className = 'hint err';
+      status.textContent = 'Ошибка: ' + e.message;
+    } finally {
+      fileInp.disabled = false;
+      fileInp.value = '';
+    }
+  });
+
+  wrap.append(fileInp, status);
+  return wrap;
+}
+
+/* ========== РЕНДЕР КАТАЛОГА ========== */
+
 function field(item,key,label,type,list){
   const inp=el('input',{type:type||'text',value:item[key]??'',autocomplete:'off'});
   if(list) inp.setAttribute('list',list);
@@ -101,20 +220,22 @@ function field(item,key,label,type,list){
     const v=inp.value;
     item[key]=(key==='price'&&v!==''&&!isNaN(v))?Number(v):v;
     setDirty(true);
-    const cd=inp.closest('.card'); if(key==='image') cd.querySelector('.thumb').src=v||'';
-    if(key==='name') cd.dataset.name=v.toLowerCase();
+    if(key==='name'){const cd=inp.closest('.card'); if(cd) cd.dataset.name=v.toLowerCase();}
   });
-  const l=el('label',{},label,inp); return l;
+  return el('label',{},label,inp);
 }
+
 function render(){
   const g=$('#grid'); g.innerHTML='';
   ['fandom','type'].forEach(k=>{
-    $('#dl-'+k).innerHTML=''; 
+    $('#dl-'+k).innerHTML='';
     [...new Set(data.items.map(i=>i[k]).filter(Boolean))].sort().forEach(v=>$('#dl-'+k).append(el('option',{value:v})));
   });
   data.items.forEach((item,idx)=>{
     const card=el('article',{className:'card'}); card.dataset.name=String(item.name||'').toLowerCase();
-    const th=el('img',{className:'thumb',alt:'',src:item.image||''}); th.onerror=()=>{th.style.visibility='hidden'}; th.onload=()=>{th.style.visibility='visible'};
+    const th=el('img',{className:'thumb',alt:'',src:item.image||''});
+    th.onerror=()=>{th.style.visibility='hidden'}; th.onload=()=>{th.style.visibility='visible'};
+
     const q=el('input',{type:'number',min:0,value:Number(item.qty)||0,'aria-label':'Количество'});
     const setQ=v=>{v=Math.max(0,v|0);q.value=v;item.qty=v;setDirty(true)};
     q.addEventListener('input',()=>setQ(parseInt(q.value||'0',10)));
@@ -123,14 +244,25 @@ function render(){
     const top=el('div',{className:'top'},th,el('label',{style:'flex:1'},'Количество, шт.',el('div',{className:'qty'},minus,q,plus)));
     const del=el('button',{type:'button',className:'btn del w',textContent:'Удалить товар'});
     del.onclick=()=>{if(confirm('Удалить «'+(item.name||'без названия')+'»?')){data.items.splice(idx,1);setDirty(true);render()}};
+
     const nameF=field(item,'name','Название'); nameF.classList.add('w');
-    const imgF=field(item,'image','Фото (путь, например images/a.jpg)'); imgF.classList.add('w');
-    const c=card;
-    card.append(top,nameF,field(item,'fandom','Фандом','text','dl-fandom'),field(item,'type','Вид мерча','text','dl-type'),
-      field(item,'price','Цена, ₽','number'),field(item,'size','Размер'),field(item,'material','Материал'),imgF,del);
-    g.append(c);
+
+    card.append(
+      top,
+      nameF,
+      field(item,'fandom','Фандом','text','dl-fandom'),
+      field(item,'type','Вид мерча','text','dl-type'),
+      field(item,'price','Цена, ₽','number'),
+      field(item,'size','Размер'),
+      field(item,'material','Материал'),
+      imageField(item, th),
+      del
+    );
+    g.append(card);
   });
 }
+
+/* ========== СОХРАНЕНИЕ items.json ========== */
 
 async function save(){
   const b=$('#save'); b.disabled=true; msg('Сохраняю…');
@@ -143,6 +275,8 @@ async function save(){
     sha=(await r.json()).content.sha; setDirty(false); msg('Сохранено ✓ Сайт обновится через минуту.');
   }catch(e){msg('Не удалось сохранить: '+e.message,1);b.disabled=false}
 }
+
+/* ========== ВХОД / ВЫХОД ========== */
 
 async function enter(){
   $('#lmsg').textContent='';
