@@ -109,6 +109,8 @@ async function compressImage(file){
   const canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(bitmap, 0, 0, w, h);
 
   // Проверяем реальную прозрачность (сэмплируем каждый ~16-й пиксель)
