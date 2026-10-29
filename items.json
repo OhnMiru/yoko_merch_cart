@@ -14,13 +14,13 @@
     {
       "id": "item-mvtsrpbn",
       "name": "Новый товар",
-      "fandom": "",
-      "type": "",
-      "qty": 0,
+      "fandom": "ясгу",
+      "type": "Гирлянда",
+      "qty": 3,
       "price": 0,
-      "size": "",
-      "material": "",
-      "image": ""
+      "size": "10",
+      "material": "Бумага",
+      "image": "images/item-mvtsrpbn.png"
     }
   ]
 }
