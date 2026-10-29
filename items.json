@@ -20,7 +20,8 @@
       "price": 5,
       "size": "10",
       "material": "Бумага",
-      "image": "images/item-mvtsrpbn.webp"
+      "image": "images/item-mvtsrpbn.webp",
+      "film": "Сердечки"
     }
   ]
 }
