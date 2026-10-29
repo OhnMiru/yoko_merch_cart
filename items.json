@@ -10,6 +10,17 @@
       "material": "Сахар",
       "qty": 25,
       "image": "images/yokushka.jpg"
+    },
+    {
+      "id": "item-mvtsrpbn",
+      "name": "Новый товар",
+      "fandom": "",
+      "type": "",
+      "qty": 0,
+      "price": 0,
+      "size": "",
+      "material": "",
+      "image": ""
     }
   ]
 }
