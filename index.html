@@ -157,6 +157,7 @@ function draw() {
         <div class="meta">${esc(i.fandom)} · ${esc(i.type)}</div>
         ${i.size ? `<div class="meta">Размер: ${esc(i.size)}</div>` : ''}
         ${i.material ? `<div class="meta">Материал: ${esc(i.material)}</div>` : ''}
+        ${i.film ? `<div class="meta">Плёнка: ${esc(i.film)}</div>` : ''}
         <div class="price">${esc(i.price)} ₽</div>
       </div>
       <button class="heart" data-id="${esc(i.id)}" aria-pressed="${fav.has(i.id)}" aria-label="В избранное">${fav.has(i.id) ? '♥' : '♡'}</button>
