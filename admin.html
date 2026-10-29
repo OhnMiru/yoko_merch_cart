@@ -48,7 +48,7 @@ label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;
   <h1>YOKO<small>админка</small></h1>
 
   <section id="login" class="panel" style="max-width:520px">
-    <p style="margin-top:0">Для входа нужен личный токен GitHub (инструкция у автора сайта). Он хранится только в вашем браузере.</p>
+    <p style="margin-top:0">Для входа нужен личный токен GitHub (страшная строчка из буков). Храни как зеницу ока</p>
     <label>Токен GitHub<input id="tok" type="password" autocomplete="off" placeholder="github_pat_…"></label>
     <label style="flex-direction:row;align-items:center;gap:8px;margin:12px 0;font-size:14px"><input id="rem" type="checkbox" style="width:auto"> Запомнить на этом устройстве</label>
     <button id="go" class="btn main">Войти</button>
@@ -137,7 +137,7 @@ async function save(){
   try{
     const r=await fetch(`${API}/contents/${FILE}`,{method:'PUT',headers:{...hdr(),'Content-Type':'application/json'},
       body:JSON.stringify({message:'Обновление каталога через админку',content:b64e(JSON.stringify(data,null,2)+'\n'),sha,branch:BRANCH})});
-    if(r.status===409||r.status===422){msg('Каталог успел измениться в другом месте. Скопируйте свои правки, обновите страницу и повторите.',1);b.disabled=false;return}
+    if(r.status===409||r.status===422){msg('Каталог успел измениться в другом месте. Скопируй свои правки, обнови страницу и повтори.',1);b.disabled=false;return}
     if(r.status===403||r.status===404){msg('У токена нет права записи (Contents: Read and write).',1);b.disabled=false;return}
     if(!r.ok) throw new Error(r.status);
     sha=(await r.json()).content.sha; setDirty(false); msg('Сохранено ✓ Сайт обновится через минуту.');
