@@ -4,18 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Остатки</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍓%3C/text%3E%3C/svg%3E">
 <style>
-:root{--bg:#f3f2f8;--card:#fff;--ink:#1d1b2e;--mute:#6b6880;--line:#dcd9ea;--low:#c62f4b;--lowbg:#fde8ec;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#15131f;--card:#1f1c2d;--ink:#eeecf7;--mute:#9a97b0;--line:#34304a;--low:#ff7d94;--lowbg:#3a1d29;color-scheme:dark}}
+:root{--bg:#fdeff1;--card:#fff;--ink:#3b0f16;--mute:#8a5a62;--line:#f3cdd2;--accdark:#9c1523;--low:#b5182b;--lowbg:#fde0dc;--head:#fde3e0;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#2a0d13;--card:#3a1620;--ink:#fde8ea;--mute:#d3a0a8;--line:#5a2530;--accdark:#ff9a8c;--low:#ff8a7a;--lowbg:#5a1e26;--head:#4a1d28;color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
 main{max-width:900px;margin:0 auto}
-h1{font-size:clamp(26px,5vw,36px);margin:28px 0 4px}
+h1{font-size:clamp(26px,5vw,36px);margin:28px 0 4px;color:var(--accdark)}
 p{color:var(--mute);margin:0 0 20px}
-a{color:inherit}
-.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
+a{color:var(--accdark)}
+.wrap{overflow-x:auto;background:var(--card);border:1.5px solid var(--line);border-radius:18px}
 table{width:100%;border-collapse:collapse;min-width:480px}
 th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:var(--head);color:var(--accdark)}
 tr:last-child td{border-bottom:0}
 td.q{font-weight:700;font-variant-numeric:tabular-nums}
 .low{background:var(--lowbg)}.low td.q{color:var(--low)}
@@ -24,7 +26,7 @@ td.q{font-weight:700;font-variant-numeric:tabular-nums}
 </head>
 <body>
 <main>
-  <h1>Остатки</h1>
+  <h1>🍓 Остатки</h1>
   <p>Красным выделены позиции, которые пора допечатать (осталось 3 и меньше). <a href="./">К каталогу</a></p>
   <div class="wrap"><table>
     <thead><tr><th>Позиция</th><th>Фандом</th><th>Вид</th><th>Осталось</th></tr></thead>
