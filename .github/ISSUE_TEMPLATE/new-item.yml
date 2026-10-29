@@ -10,7 +10,6 @@ body:
   - type: input
     attributes:
       label: Фандом
-      description: Пишите одинаково, чтобы фандом не задвоился
     validations:
       required: true
   - type: dropdown
@@ -40,7 +39,7 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: Картинка
-      description: Перетащите файл в это поле.
+      label: Арт
+      description: Перетащи файл в это поле.
     validations:
       required: true
