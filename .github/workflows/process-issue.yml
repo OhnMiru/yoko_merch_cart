@@ -1,0 +1,30 @@
+name: Обработка заявок
+on:
+  issues:
+    types: [opened]
+permissions:
+  contents: write
+  issues: write
+concurrency: catalog
+jobs:
+  apply:
+    if: contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pillow
+      - run: python process_issue.py process
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "$(python -c "import json;print(json.load(open('/tmp/result.json'))['commit'])")"
+            git pull --rebase
+            git push
+          fi
+      - run: python process_issue.py notify
