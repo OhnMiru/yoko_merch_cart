@@ -1,17 +1,6 @@
 {
   "items": [
     {
-      "id": "primer-stiker",
-      "name": "Пример: стикер (удалите через форму)",
-      "fandom": "Пример",
-      "type": "Стикеры",
-      "price": 100,
-      "size": "5×5 см",
-      "material": "Винил",
-      "qty": 5,
-      "image": ""
-    },
-    {
       "id": "yokushka",
       "name": "Йокушка",
       "fandom": "Йокооо",
