@@ -1,0 +1,10 @@
+name: Убрать позицию
+description: Удалить мерч из каталога
+title: "Убрать: "
+body:
+  - type: input
+    attributes:
+      label: Позиция
+      description: Название как в каталоге
+    validations:
+      required: true
