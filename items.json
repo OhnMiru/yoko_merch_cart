@@ -10,6 +10,17 @@
       "material": "Винил",
       "qty": 5,
       "image": ""
+    },
+    {
+      "id": "yokushka",
+      "name": "Йокушка",
+      "fandom": "Йокооо",
+      "type": "Стикеры",
+      "price": 50,
+      "size": "5 × 5",
+      "material": "Сахар",
+      "qty": 30,
+      "image": "images/yokushka.jpg"
     }
   ]
 }
