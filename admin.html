@@ -19,9 +19,9 @@ body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.45 "Nunito",system-u
 h1{font:400 clamp(28px,6vw,48px)/1 "Rubik Mono One","Arial Black",sans-serif;letter-spacing:.06em;color:var(--lav);text-shadow:4px 4px 0 rgba(177,159,198,.35);margin:8px 0 16px}
 h1 small{font:700 16px "Nunito",sans-serif;letter-spacing:0;color:var(--accd);text-shadow:none;margin-left:8px}
 .panel{background:var(--panel);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:2px solid rgba(255,255,255,.6);border-radius:24px;padding:clamp(14px,3vw,26px);box-shadow:0 10px 40px rgba(130,100,170,.15)}
-input,button{font:inherit;color:var(--ink)}
-input{width:100%;border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--card)}
-input:focus-visible,button:focus-visible{outline:3px solid var(--lavd);outline-offset:2px}
+input,button,select{font:inherit;color:var(--ink)}
+input,select{width:100%;border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--card)}
+input:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid var(--lavd);outline-offset:2px}
 label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;color:var(--mute)}
 .btn{border:2px solid var(--lav);background:var(--card);border-radius:999px;padding:8px 18px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 var(--lavd)}
 .btn.main{background:var(--lav);color:#fff}
@@ -34,7 +34,7 @@ label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:14px;box-shadow:0 5px 0 rgba(177,159,198,.45);display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .card .w{grid-column:1/-1}
-.thumb{width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--line)}
+.thumb{width:96px;height:96px;border-radius:12px;object-fit:cover;background:var(--line);image-rendering:auto}
 .top{grid-column:1/-1;display:flex;gap:10px;align-items:center}
 .qty{display:flex;gap:6px;align-items:center}
 .qty button{width:38px;height:38px;border-radius:50%;border:2px solid var(--lav);background:var(--card);font-size:20px;font-weight:800;cursor:pointer}
@@ -67,13 +67,17 @@ label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;
     <div class="grid" id="grid"></div>
     <p class="hint">После сохранения сайт обновится примерно через минуту.</p>
   </section>
-  <datalist id="dl-fandom"></datalist><datalist id="dl-type"></datalist>
+  <datalist id="dl-fandom"></datalist>
 </div>
 
 <script>
 const OWNER='OhnMiru', REPO='yoko_merch_cart', BRANCH='main', FILE='items.json';
 const API=`https://api.github.com/repos/${OWNER}/${REPO}`;
 const $=s=>document.querySelector(s);
+
+// Фиксированный список видов мерча
+const TYPES = ['Стикеры','Стикерпаки','Карточки','Открытки','Значки','Брелки','Стенды','Текстиль','Другое'];
+
 let token=sessionStorage.getItem('gh')||localStorage.getItem('gh')||'', data=null, sha='', dirty=false;
 
 const hdr=()=>({Authorization:'Bearer '+token,Accept:'application/vnd.github+json'});
@@ -96,12 +100,12 @@ function el(tag,props,...kids){const e=document.createElement(tag);Object.assign
 
 /* ========== ЗАГРУЗКА ФОТО ========== */
 
-// Сжимаем: максимум 1200px по длинной стороне.
-// Если у картинки есть настоящая прозрачность — PNG (для стикеров),
-// иначе WebP q=0.85 (JPEG как фолбэк для старых браузеров).
+// Сжимаем: максимум 1600px по длинной стороне.
+// Если есть настоящая прозрачность — PNG (для стикеров),
+// иначе WebP q=0.88 (JPEG как фолбэк).
 async function compressImage(file){
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  const MAX = 1200;
+  const MAX = 1600;
   const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
   const w = Math.max(1, Math.round(bitmap.width * scale));
   const h = Math.max(1, Math.round(bitmap.height * scale));
@@ -113,36 +117,31 @@ async function compressImage(file){
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(bitmap, 0, 0, w, h);
 
-  // Проверяем реальную прозрачность (сэмплируем каждый ~16-й пиксель)
   let hasAlpha = false;
   try {
     const px = ctx.getImageData(0, 0, w, h).data;
     for (let i = 3; i < px.length; i += 4 * 16) {
       if (px[i] < 255) { hasAlpha = true; break; }
     }
-  } catch (_) { /* CORS-файл из file:// — маловероятно, но на всякий */ }
+  } catch (_) { /* CORS-файл — маловероятно */ }
 
   const toBlob = (mime, q) => new Promise(res => canvas.toBlob(res, mime, q));
 
   if (hasAlpha) {
-    // PNG без потерь — сохраняет прозрачность
     const blob = await toBlob('image/png');
     return { blob, ext: 'png', mime: 'image/png' };
   }
 
-  // Пробуем WebP, если браузер не умеет — toBlob вернёт PNG, проверим по mime
-  let blob = await toBlob('image/webp', 0.85);
+  const q = scale < 0.5 ? 0.90 : 0.88;
+  let blob = await toBlob('image/webp', q);
   if (blob && blob.type === 'image/webp') {
     return { blob, ext: 'webp', mime: 'image/webp' };
   }
-  blob = await toBlob('image/jpeg', 0.88);
+  blob = await toBlob('image/jpeg', q);
   return { blob, ext: 'jpg', mime: 'image/jpeg' };
 }
 
-// Грузим файл в репо: PUT /contents/images/{id}.{ext}
-// Если файл с таким именем уже есть — перезаписываем (через sha).
-// Старые версии с другим расширением (например .jpg при новом .webp) не удаляем —
-// это не критично, но можно добавить очистку отдельно.
+// PUT /contents/images/{id}.{ext}; если файл есть — перезапись через sha
 async function uploadImage(file, itemId){
   const { blob, ext } = await compressImage(file);
   const path = `images/${itemId}.${ext}`;
@@ -152,7 +151,6 @@ async function uploadImage(file, itemId){
   for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
   const b64 = btoa(bin);
 
-  // Узнаём sha, если файл уже существует (перезапись)
   let fileSha;
   const head = await fetch(`${API}/contents/${path}?ref=${BRANCH}`, { headers: hdr(), cache: 'no-store' });
   if (head.ok) {
@@ -180,7 +178,7 @@ async function uploadImage(file, itemId){
   return path;
 }
 
-// Поле выбора файла + превью + статус
+// Поле выбора файла + статус
 function imageField(item, thumbEl){
   const wrap = el('label', { className: 'w' }, 'Фото');
   const fileInp = el('input', { type: 'file', accept: 'image/*' });
@@ -227,12 +225,33 @@ function field(item,key,label,type,list){
   return el('label',{},label,inp);
 }
 
+// Выпадающий список с сохранением «чужого» значения из items.json
+function selectField(item, key, label, options){
+  const cur = item[key] ?? '';
+  const sel = el('select', {});
+  sel.append(el('option', { value: '' }, '— выберите —'));
+  const opts = [...options];
+  if (cur && !opts.includes(cur)) opts.push(cur);
+  opts.forEach(v => {
+    const o = el('option', { value: v }, v);
+    if (v === cur) o.selected = true;
+    sel.append(o);
+  });
+  sel.addEventListener('change', () => {
+    item[key] = sel.value;
+    setDirty(true);
+  });
+  return el('label', {}, label, sel);
+}
+
 function render(){
   const g=$('#grid'); g.innerHTML='';
-  ['fandom','type'].forEach(k=>{
-    $('#dl-'+k).innerHTML='';
-    [...new Set(data.items.map(i=>i[k]).filter(Boolean))].sort().forEach(v=>$('#dl-'+k).append(el('option',{value:v})));
-  });
+
+  // datalist только для фандома
+  $('#dl-fandom').innerHTML='';
+  [...new Set(data.items.map(i=>i.fandom).filter(Boolean))].sort()
+    .forEach(v=>$('#dl-fandom').append(el('option',{value:v})));
+
   data.items.forEach((item,idx)=>{
     const card=el('article',{className:'card'}); card.dataset.name=String(item.name||'').toLowerCase();
     const th=el('img',{className:'thumb',alt:'',src:item.image||''});
@@ -253,10 +272,11 @@ function render(){
       top,
       nameF,
       field(item,'fandom','Фандом','text','dl-fandom'),
-      field(item,'type','Вид мерча','text','dl-type'),
-      field(item,'price','Цена, ₽','number'),
-      field(item,'size','Размер'),
+      selectField(item,'type','Вид мерча',TYPES),
       field(item,'material','Материал'),
+      field(item,'film','Плёнка'),
+      field(item,'size','Размер'),
+      field(item,'price','Цена, ₽','number'),
       imageField(item, th),
       del
     );
@@ -295,8 +315,22 @@ $('#tok').addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click()});
 $('#out').onclick=()=>{if(dirty&&!confirm('Есть несохранённые изменения. Выйти?'))return;sessionStorage.removeItem('gh');localStorage.removeItem('gh');location.reload()};
 $('#save').onclick=save;
 $('#add').onclick=()=>{
-  data.items.push({id:'item-'+Date.now().toString(36),name:'Новый товар',fandom:'',type:'',qty:0,price:0,size:'',material:'',image:''});
-  setDirty(true); render(); const last=$('#grid').lastElementChild; last.scrollIntoView({behavior:'smooth',block:'center'}); last.querySelector('input[type=text]').focus();
+  data.items.push({
+    id:'item-'+Date.now().toString(36),
+    name:'Новый товар',
+    fandom:'',
+    type:'',
+    material:'',
+    film:'',
+    size:'',
+    price:0,
+    qty:0,
+    image:''
+  });
+  setDirty(true); render();
+  const last=$('#grid').lastElementChild;
+  last.scrollIntoView({behavior:'smooth',block:'center'});
+  last.querySelector('input[type=text]').focus();
 };
 $('#q').addEventListener('input',e=>{const v=e.target.value.toLowerCase();document.querySelectorAll('.card').forEach(c=>c.hidden=!!v&&!c.dataset.name.includes(v))});
 if(token) enter();
