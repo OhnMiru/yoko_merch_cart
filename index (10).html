@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мерч Йоко</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⭐%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&family=Rubik+Mono+One&display=swap">
+<style>
+:root{
+  --bg-top:#d3c3dd;--bg-bot:#f1eef4;--paper:#fff;
+  --lav:#c3b3d8;--lav-dark:#b19fc6;--acc:#8e7bab;--accdark:#6d5a8a;
+  --card:rgba(255,255,255,.88);--panel:rgba(255,255,255,.6);
+  --ink:#3f3158;--mute:#7d6b98;--line:#d9cce8;--soft:#efe8f6;
+  --star:#f9eeea;--heart:#e07aa6;--black:#3f3158;--orange:#b19fc6;
+  --stripe1:rgba(255,255,255,.16);--stripe2:rgba(140,110,180,.07);
+  color-scheme:light}
+@media (prefers-color-scheme:dark){:root{
+  --bg-top:#3b3150;--bg-bot:#221c31;--paper:#2f2742;
+  --lav:#cbbde0;--lav-dark:#7d6a9b;--acc:#cbbde0;--accdark:#e3d9f2;
+  --card:rgba(58,48,80,.9);--panel:rgba(40,32,58,.65);
+  --ink:#f1eaf9;--mute:#bfb0d6;--line:#54466f;--soft:#4a3d63;
+  --star:#4d3f62;--heart:#f08fb8;--black:#f1eaf9;--orange:#cbbde0;
+  --stripe1:rgba(255,255,255,.04);--stripe2:rgba(0,0,0,.08);
+  color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;color:var(--ink);font:16px/1.45 "Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  min-height:100vh;position:relative;overflow-x:hidden;
+  background:
+    repeating-linear-gradient(45deg,var(--stripe1) 0 90px,transparent 90px 180px),
+    repeating-linear-gradient(-45deg,var(--stripe2) 0 90px,transparent 90px 180px),
+    linear-gradient(180deg,var(--bg-top) 0%,var(--bg-bot) 100%);
+  background-attachment:fixed;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+
+/* звёзды */
+.star{position:fixed;aspect-ratio:1;z-index:0;pointer-events:none}
+.star svg{width:100%;height:100%;display:block}
+.s1{right:-6vw;top:8vh;width:min(34vw,260px);transform:rotate(12deg)}
+.s2{left:-5vw;bottom:6vh;width:min(30vw,230px);transform:rotate(-8deg)}
+.s3{right:-8vw;bottom:-4vh;width:min(38vw,300px);transform:rotate(18deg)}
+
+/* шапка с рваным краем */
+.hero{position:relative;z-index:2;height:clamp(130px,22vw,210px)}
+.hero svg.torn{position:absolute;inset:0;width:100%;height:100%;display:block}
+h1{position:absolute;left:clamp(16px,4vw,56px);top:clamp(14px,3vw,34px);margin:0;
+  font:400 clamp(34px,7vw,72px)/1 "Rubik Mono One","Arial Black",sans-serif;letter-spacing:.06em;
+  color:var(--lav);text-shadow:6px 6px 0 rgba(177,159,198,.35)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.favtop{position:absolute;right:clamp(14px,3vw,40px);top:clamp(16px,3vw,30px);
+  display:inline-flex;align-items:center;gap:8px;border:2px solid var(--lav);background:var(--card);
+  color:var(--accdark);border-radius:999px;padding:8px 16px;font:inherit;font-weight:800;font-size:18px;
+  cursor:pointer;box-shadow:0 4px 0 var(--lav-dark)}
+.favtop span{background:var(--soft);color:var(--accdark);border-radius:999px;min-width:24px;padding:0 8px;font-size:15px;text-align:center}
+.favtop[aria-pressed=true]{background:var(--lav);color:#fff}
+.favtop[aria-pressed=true] span{background:#fff;color:var(--accdark)}
+
+/* контент */
+main{position:relative;z-index:1;max-width:1100px;margin:-8px auto 0;padding:0 clamp(14px,3vw,28px) 40px}
+.panel{background:var(--panel);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border:2px solid rgba(255,255,255,.65);border-radius:28px;padding:clamp(16px,3vw,32px);
+  box-shadow:0 10px 40px rgba(130,100,170,.15)}
+.sub{color:var(--accdark);font-weight:800;font-size:clamp(17px,2.6vw,24px);text-align:center;margin:0 0 18px}
+.filters{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.filters label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--mute);flex:1 1 180px;max-width:280px}
+select{appearance:none;-webkit-appearance:none;font:inherit;font-weight:700;color:var(--ink);cursor:pointer;
+  border:2px solid var(--lav);border-radius:16px;padding:10px 40px 10px 14px;box-shadow:0 3px 0 var(--lav-dark);
+  background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%238e7bab' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center}
+select:hover{border-color:var(--acc)}
+select:focus-visible,.favtop:focus-visible,.heart:focus-visible{outline:3px solid var(--lav-dark);outline-offset:2px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;margin:24px 0 0}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;box-shadow:0 6px 0 rgba(177,159,198,.45);transition:transform .15s}
+.card:hover{transform:translateY(-3px)}
+.pic{aspect-ratio:1;background:linear-gradient(135deg,var(--soft),#f6eeee);display:grid;place-items:center;color:var(--mute);font-size:14px}
+@media (prefers-color-scheme:dark){.pic{background:var(--soft)}}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1}
+.name{font-weight:800}
+.meta{color:var(--mute);font-size:14px}
+.price{font-weight:800;margin-top:auto;padding-top:8px;font-size:18px}
+.price::before{content:"";}
+.heart{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;border:2px solid var(--lav);
+  background:var(--card);color:var(--acc);font-size:21px;cursor:pointer;line-height:1}
+.heart[aria-pressed=true]{background:var(--lav);color:var(--heart)}
+.out .pic,.out .body{filter:grayscale(1);opacity:.5}
+.badge{position:absolute;left:10px;top:10px;background:var(--black);color:var(--paper);font-size:13px;font-weight:700;border-radius:999px;padding:3px 10px}
+.badge.low{background:var(--lav);color:#fff;box-shadow:0 2px 0 var(--lav-dark)}
+.empty{color:var(--mute);padding:40px 0;text-align:center;grid-column:1/-1}
+footer{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 16px 32px;color:var(--mute);font-size:14px}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="st" viewBox="0 0 100 100">
+    <path d="M50 10 L61 36 L90 39 L68 58 L75 86 L50 71 L25 86 L32 58 L10 39 L39 36 Z"
+          fill="var(--star)" stroke="var(--star)" stroke-width="12" stroke-linejoin="round"/>
+  </symbol>
+</svg>
+<div class="star s1" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#st"/></svg></div>
+<div class="star s2" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#st"/></svg></div>
+<div class="star s3" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#st"/></svg></div>
+
+<header class="hero">
+  <svg class="torn" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 150 L50 138 Q80 132 110 136 Q140 140 170 130 L230 140 Q270 124 320 128 Q360 110 400 112 Q430 96 470 100 Q510 90 560 70 Q600 56 650 40 Q720 22 780 8 L830 0 L1000 0 L0 0 Z"
+          transform="translate(0,14)" fill="var(--lav-dark)" opacity=".85"/>
+    <path d="M0 150 L50 138 Q80 132 110 136 Q140 140 170 130 L230 140 Q270 124 320 128 Q360 110 400 112 Q430 96 470 100 Q510 90 560 70 Q600 56 650 40 Q720 22 780 8 L830 0 L0 0 Z"
+          fill="var(--paper)"/>
+  </svg>
+  <h1>YOKO<span class="sr"> — Мерч Йоко</span></h1>
+  <button id="favBtn" class="favtop" aria-pressed="false">♥<span id="favCount">0</span></button>
+</header>
+
+<main>
+  <section class="panel">
+    <p class="sub">Всё на благо Йокушки! Всё на благо Йокушки!</p>
+    <div class="filters">
+      <label>Фандом<select id="fandom"></select></label>
+      <label>Вид мерча<select id="type"></select></label>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LOW_STOCK = 3; // показывать «осталось несколько штук» при таком остатке и меньше
+let items = [], fav = new Set(), flt = {fandom:'', type:'', fav:false};
+try { fav = new Set(JSON.parse(localStorage.getItem('fav') || '[]')); } catch (e) {}
+const saveFav = () => { try { localStorage.setItem('fav', JSON.stringify([...fav])); } catch (e) {} };
+
+function fill(sel, key, label) {
+  const vals = [...new Set(items.map(i => i[key]).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'ru'));
+  if (flt[key] && !vals.includes(flt[key])) flt[key] = '';
+  sel.innerHTML = `<option value="">${label}</option>` + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  sel.value = flt[key];
+}
+
+function draw() {
+  fill($('#fandom'), 'fandom', 'Все фандомы');
+  fill($('#type'), 'type', 'Все виды');
+  $('#favBtn').setAttribute('aria-pressed', flt.fav);
+  $('#favCount').textContent = items.filter(i => fav.has(i.id)).length;
+  const list = items.filter(i => (!flt.fandom || i.fandom === flt.fandom) && (!flt.type || i.type === flt.type) && (!flt.fav || fav.has(i.id)));
+  list.sort((a, b) => (b.qty > 0) - (a.qty > 0));
+  $('#grid').innerHTML = list.length ? list.map(i => `
+    <article class="card ${i.qty > 0 ? '' : 'out'}">
+      <div class="pic">${i.image ? `<img src="${esc(i.image)}" alt="${esc(i.name)}" loading="lazy">` : 'Нет фото'}</div>
+      ${i.qty <= 0 ? '<span class="badge">Нет в наличии</span>' : i.qty <= LOW_STOCK ? '<span class="badge low">Осталось несколько штук</span>' : ''}
+      <div class="body">
+        <div class="name">${esc(i.name)}</div>
+        <div class="meta">${esc(i.fandom)} · ${esc(i.type)}</div>
+        ${i.size ? `<div class="meta">Размер: ${esc(i.size)}</div>` : ''}
+        ${i.material ? `<div class="meta">Материал: ${esc(i.material)}</div>` : ''}
+        <div class="price">${esc(i.price)} ₽</div>
+      </div>
+      <button class="heart" data-id="${esc(i.id)}" aria-pressed="${fav.has(i.id)}" aria-label="В избранное">${fav.has(i.id) ? '♥' : '♡'}</button>
+    </article>`).join('') : `<p class="empty">${flt.fav ? 'В избранном пока пусто.' : 'Здесь пока ничего нет.'}</p>`;
+}
+
+$('#fandom').addEventListener('change', e => { flt.fandom = e.target.value; draw(); });
+$('#type').addEventListener('change', e => { flt.type = e.target.value; draw(); });
+$('#favBtn').addEventListener('click', () => { flt.fav = !flt.fav; draw(); });
+document.addEventListener('click', e => {
+  const h = e.target.closest('.heart');
+  if (h) { const id = h.dataset.id; fav.has(id) ? fav.delete(id) : fav.add(id); saveFav(); draw(); }
+});
+
+fetch('items.json?t=' + Date.now()).then(r => r.json()).then(d => { items = d.items || []; draw(); })
+  .catch(() => { $('#grid').innerHTML = '<p class="empty">Не удалось загрузить каталог. Обновите страницу.</p>'; });
+</script>
+</body>
+</html>
