@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>YOKO · админка</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&family=Rubik+Mono+One&display=swap">
+<style>
+:root{--bg-top:#d3c3dd;--bg-bot:#f1eef4;--lav:#c3b3d8;--lavd:#b19fc6;--acc:#8e7bab;--accd:#6d5a8a;
+ --card:rgba(255,255,255,.9);--panel:rgba(255,255,255,.6);--ink:#3f3158;--mute:#7d6b98;--line:#d9cce8;--err:#c0392b;--ok:#3d8b5a;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg-top:#3b3150;--bg-bot:#221c31;--lav:#cbbde0;--lavd:#7d6a9b;--acc:#cbbde0;--accd:#e3d9f2;
+ --card:rgba(58,48,80,.92);--panel:rgba(40,32,58,.65);--ink:#f1eaf9;--mute:#bfb0d6;--line:#54466f;--err:#ff8a7a;--ok:#7fd1a0;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.45 "Nunito",system-ui,sans-serif;
+ background:repeating-linear-gradient(45deg,rgba(255,255,255,.14) 0 90px,transparent 90px 180px),linear-gradient(180deg,var(--bg-top),var(--bg-bot));background-attachment:fixed;
+ padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.wrap{max-width:1100px;margin:0 auto;padding:16px clamp(12px,3vw,28px) 48px}
+h1{font:400 clamp(28px,6vw,48px)/1 "Rubik Mono One","Arial Black",sans-serif;letter-spacing:.06em;color:var(--lav);text-shadow:4px 4px 0 rgba(177,159,198,.35);margin:8px 0 16px}
+h1 small{font:700 16px "Nunito",sans-serif;letter-spacing:0;color:var(--accd);text-shadow:none;margin-left:8px}
+.panel{background:var(--panel);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:2px solid rgba(255,255,255,.6);border-radius:24px;padding:clamp(14px,3vw,26px);box-shadow:0 10px 40px rgba(130,100,170,.15)}
+input,button{font:inherit;color:var(--ink)}
+input{width:100%;border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--card)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--lavd);outline-offset:2px}
+label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;color:var(--mute)}
+.btn{border:2px solid var(--lav);background:var(--card);border-radius:999px;padding:8px 18px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 var(--lavd)}
+.btn.main{background:var(--lav);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.del{border-color:var(--err);color:var(--err);box-shadow:0 3px 0 var(--err)}
+.bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;margin-bottom:12px;background:linear-gradient(var(--bg-top),transparent)}
+.bar input{flex:1 1 180px;max-width:300px}
+#msg{font-weight:700;color:var(--ok);flex:1 1 100%}
+#msg.err{color:var(--err)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:14px;box-shadow:0 5px 0 rgba(177,159,198,.45);display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card .w{grid-column:1/-1}
+.thumb{width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--line)}
+.top{grid-column:1/-1;display:flex;gap:10px;align-items:center}
+.qty{display:flex;gap:6px;align-items:center}
+.qty button{width:38px;height:38px;border-radius:50%;border:2px solid var(--lav);background:var(--card);font-size:20px;font-weight:800;cursor:pointer}
+.qty input{text-align:center;width:70px}
+.hint{font-size:13px;color:var(--mute)}
+[hidden]{display:none!important}
+.btn.alert{background:#f3c9d8;border-color:#e07aa6;box-shadow:0 3px 0 #e07aa6;color:#5a1f3a}
+dialog{border:2px solid var(--lav);border-radius:24px;background:var(--bg-bot);color:var(--ink);width:calc(100% - 24px);max-width:680px;max-height:85vh;padding:18px;overflow:auto}
+dialog::backdrop{background:rgba(40,25,60,.5)}
+.dh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.dh h2{margin:0;font-size:22px}
+.arow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;margin-bottom:10px}
+.ai{flex:1 1 200px}.aq{flex:0 1 180px;display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.chip{border-radius:999px;padding:2px 12px;font-size:13px;font-weight:800}
+.chip.bad{background:#f3c9d8;color:#5a1f3a}.chip.good{background:#cdeedb;color:#1f5a38}
+.df{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>YOKO<small>админка</small></h1>
+
+  <section id="login" class="panel" style="max-width:520px">
+    <p style="margin-top:0">Для входа нужен личный токен GitHub (инструкция у автора сайта). Он хранится только в вашем браузере.</p>
+    <label>Токен GitHub<input id="tok" type="password" autocomplete="off" placeholder="github_pat_…"></label>
+    <label style="flex-direction:row;align-items:center;gap:8px;margin:12px 0;font-size:14px"><input id="rem" type="checkbox" style="width:auto"> Запомнить на этом устройстве</label>
+    <button id="go" class="btn main">Войти</button>
+    <p id="lmsg" class="hint err" style="color:var(--err)"></p>
+  </section>
+
+  <section id="app" hidden>
+    <div class="bar">
+      <button id="save" class="btn main" disabled>Сохранить</button>
+      <button id="add" class="btn">+ Новый товар</button>
+      <input id="q" type="search" placeholder="Поиск по названию…" aria-label="Поиск">
+      <button id="bell" class="btn" aria-label="Нехватки">🔔 0</button>
+      <button id="out" class="btn">Выйти</button>
+      <div id="msg"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="hint">После сохранения сайт обновится примерно через минуту.</p>
+  </section>
+  <dialog id="dlg" aria-labelledby="dt">
+    <div class="dh"><h2 id="dt">Нехватки мерча</h2><button id="dx" class="btn" aria-label="Закрыть окно">✕</button></div>
+    <div id="alist"></div>
+    <p id="unk" class="hint"></p>
+    <div class="df"><button id="clr" class="btn">Закрыть все пополненные</button></div>
+  </dialog>
+  <datalist id="dl-fandom"></datalist><datalist id="dl-type"></datalist>
+</div>
+
+<script>
+const OWNER='OhnMiru', REPO='yoko_merch_cart', BRANCH='main', FILE='items.json';
+const API=`https://api.github.com/repos/${OWNER}/${REPO}`;
+const $=s=>document.querySelector(s);
+let token=sessionStorage.getItem('gh')||localStorage.getItem('gh')||'', data=null, sha='', dirty=false;
+
+const hdr=()=>({Authorization:'Bearer '+token,Accept:'application/vnd.github+json'});
+const b64d=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+const b64e=s=>{let r='';new TextEncoder().encode(s).forEach(c=>r+=String.fromCharCode(c));return btoa(r)};
+const msg=(t,err)=>{const m=$('#msg');m.textContent=t;m.className=err?'err':''};
+const setDirty=v=>{dirty=v;$('#save').disabled=!v};
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+
+async function load(){
+  const r=await fetch(`${API}/contents/${FILE}?ref=${BRANCH}`,{headers:hdr(),cache:'no-store'});
+  if(r.status===401) throw new Error('Токен неверный или истёк.');
+  if(r.status===403||r.status===404) throw new Error('У токена нет доступа к репозиторию.');
+  if(!r.ok) throw new Error('Ошибка GitHub: '+r.status);
+  const j=await r.json(); sha=j.sha; data=JSON.parse(b64d(j.content));
+  if(!Array.isArray(data.items)) data.items=[];
+}
+
+// ALERTS-START
+const RULES=[['стикерпак',1],['стикер',1],['открытк',1],['карточк',1],['стенд',5],['брелок',5],['брелк',5],['значок',5],['значк',5],['текстил',5],['друг',5]];
+function limitOf(i){const t=String(i.type||'').toLowerCase();for(const [k,l] of RULES) if(t.includes(k)) return l;return null}
+const today=()=>new Date().toISOString().slice(0,10);
+function sync(){
+  const al=data.alerts=(data.alerts&&typeof data.alerts==='object')?data.alerts:{};let ch=false;
+  const ids=new Set(data.items.map(i=>String(i.id)));
+  for(const id in al) if(!ids.has(id)){delete al[id];ch=true}
+  data.items.forEach(i=>{
+    const id=String(i.id),lim=limitOf(i),q=Number(i.qty)||0,e=al[id];
+    if(lim==null){if(e){delete al[id];ch=true}return}
+    if(q<=lim){
+      if(!e||(e.ack&&q<e.ackQty)){al[id]={since:today(),from:q,ack:false};ch=true}
+    }else if(e&&e.ack){delete al[id];ch=true}
+  });
+  return ch;
+}
+// ALERTS-END
+const syncUI=()=>{sync();bell()};
+const fmt=d=>{try{return new Date(d).toLocaleDateString('ru',{day:'numeric',month:'long'})}catch(e){return d}};
+function activeRows(){
+  const by=Object.fromEntries(data.items.map(i=>[String(i.id),i]));
+  return Object.entries(data.alerts||{}).filter(([id,e])=>!e.ack&&by[id]).map(([id,e])=>{
+      const i=by[id],lim=limitOf(i),q=Number(i.qty)||0;return {id,e,i,lim,q,low:q<=lim}});
+}
+function bell(){
+  const rs=activeRows(),bad=rs.filter(r=>r.low).length,b=$('#bell');
+  b.textContent='🔔 '+rs.length;b.className='btn'+(bad?' alert':'');
+  b.title=bad?('Не хватает: '+bad):(rs.length?'Всё пополнено — можно закрыть':'Нехваток нет');
+}
+function renderAlerts(){
+  const L=$('#alist');L.innerHTML='';
+  const rows=activeRows().sort((a,b)=>(b.low-a.low)||String(a.i.name).localeCompare(String(b.i.name),'ru'));
+  if(!rows.length) L.append(el('p',{className:'hint',textContent:'Всё в порядке: нехваток нет.'}));
+  rows.forEach(r=>{
+    const chip=el('span',{className:'chip '+(r.low?'bad':'good'),textContent:r.low?(r.q===0?'Закончилось':'Не хватает'):'Пополнено ✓'});
+    const x=el('button',{type:'button',className:'btn',textContent:'Закрыть'});
+    x.onclick=()=>{r.e.ack=true;r.e.ackQty=r.q;sync();setDirty(true);bell();renderAlerts();msg('Не забудьте нажать «Сохранить».')};
+    L.append(el('div',{className:'arow'},
+      el('div',{className:'ai'},el('b',{textContent:r.i.name||'Без названия'}),el('div',{className:'hint',textContent:[r.i.fandom,r.i.type].filter(Boolean).join(' · ')+' · порог: '+r.lim+' шт.'})),
+      el('div',{className:'aq'},chip,el('div',{textContent:'Сейчас: '+r.q+' шт.'}),el('div',{className:'hint',textContent:'Было: '+r.e.from+' шт. · с '+fmt(r.e.since)})),
+      x));
+  });
+  const unk=[...new Set(data.items.filter(i=>limitOf(i)==null).map(i=>i.type||'(без вида)'))];
+  $('#unk').textContent=unk.length?'Для этих видов уведомления не настроены: '+unk.join(', ')+'.':'';
+  $('#clr').disabled=!rows.some(r=>!r.low);
+}
+function openAlerts(){sync();bell();renderAlerts();$('#dlg').showModal()}
+
+function el(tag,props,...kids){const e=document.createElement(tag);Object.assign(e,props||{});kids.forEach(k=>e.append(k));return e}
+
+function field(item,key,label,type,list){
+  const inp=el('input',{type:type||'text',value:item[key]??'',autocomplete:'off'});
+  if(list) inp.setAttribute('list',list);
+  if(type==='number') inp.min=0;
+  inp.addEventListener('input',()=>{
+    const v=inp.value;
+    item[key]=(key==='price'&&v!==''&&!isNaN(v))?Number(v):v;
+    setDirty(true);
+    const cd=inp.closest('.card'); if(key==='image') cd.querySelector('.thumb').src=v||'';
+    if(key==='name') cd.dataset.name=v.toLowerCase();
+  });
+  if(key==='type') inp.addEventListener('change',syncUI);
+  const l=el('label',{},label,inp); return l;
+}
+function render(){
+  const g=$('#grid'); g.innerHTML='';
+  ['fandom','type'].forEach(k=>{
+    $('#dl-'+k).innerHTML=''; 
+    [...new Set(data.items.map(i=>i[k]).filter(Boolean))].sort().forEach(v=>$('#dl-'+k).append(el('option',{value:v})));
+  });
+  data.items.forEach((item,idx)=>{
+    const card=el('article',{className:'card'}); card.dataset.name=String(item.name||'').toLowerCase();
+    const th=el('img',{className:'thumb',alt:'',src:item.image||''}); th.onerror=()=>{th.style.visibility='hidden'}; th.onload=()=>{th.style.visibility='visible'};
+    const q=el('input',{type:'number',min:0,value:Number(item.qty)||0,'aria-label':'Количество'});
+    const setQ=v=>{v=Math.max(0,v|0);q.value=v;item.qty=v;setDirty(true)};
+    q.addEventListener('input',()=>setQ(parseInt(q.value||'0',10)));
+    q.addEventListener('change',syncUI);
+    const minus=el('button',{type:'button',textContent:'−','aria-label':'Минус'}); minus.onclick=()=>{setQ(parseInt(q.value||'0',10)-1);syncUI()};
+    const plus=el('button',{type:'button',textContent:'+','aria-label':'Плюс'}); plus.onclick=()=>{setQ(parseInt(q.value||'0',10)+1);syncUI()};
+    const top=el('div',{className:'top'},th,el('label',{style:'flex:1'},'Количество, шт.',el('div',{className:'qty'},minus,q,plus)));
+    const del=el('button',{type:'button',className:'btn del w',textContent:'Удалить товар'});
+    del.onclick=()=>{if(confirm('Удалить «'+(item.name||'без названия')+'»?')){data.items.splice(idx,1);setDirty(true);syncUI();render()}};
+    const nameF=field(item,'name','Название'); nameF.classList.add('w');
+    const imgF=field(item,'image','Фото (путь, например images/a.jpg)'); imgF.classList.add('w');
+    const c=card;
+    card.append(top,nameF,field(item,'fandom','Фандом','text','dl-fandom'),field(item,'type','Вид мерча','text','dl-type'),
+      field(item,'price','Цена, ₽','number'),field(item,'size','Размер'),field(item,'material','Материал'),imgF,del);
+    g.append(c);
+  });
+}
+
+async function save(){
+  sync(); const b=$('#save'); b.disabled=true; msg('Сохраняю…');
+  try{
+    const r=await fetch(`${API}/contents/${FILE}`,{method:'PUT',headers:{...hdr(),'Content-Type':'application/json'},
+      body:JSON.stringify({message:'Обновление каталога через админку',content:b64e(JSON.stringify(data,null,2)+'\n'),sha,branch:BRANCH})});
+    if(r.status===409||r.status===422){msg('Каталог успел измениться в другом месте. Скопируйте свои правки, обновите страницу и повторите.',1);b.disabled=false;return}
+    if(r.status===403||r.status===404){msg('У токена нет права записи (Contents: Read and write).',1);b.disabled=false;return}
+    if(!r.ok) throw new Error(r.status);
+    sha=(await r.json()).content.sha; setDirty(false); msg('Сохранено ✓ Сайт обновится через минуту.');
+  }catch(e){msg('Не удалось сохранить: '+e.message,1);b.disabled=false}
+}
+
+async function enter(){
+  $('#lmsg').textContent='';
+  try{ await load(); }
+  catch(e){ token=''; sessionStorage.removeItem('gh'); localStorage.removeItem('gh'); $('#lmsg').textContent=e.message; return }
+  $('#login').hidden=true; $('#app').hidden=false; sync(); render(); bell(); setDirty(false); msg('');
+}
+$('#go').onclick=()=>{
+  token=$('#tok').value.trim(); if(!token) return;
+  (($('#rem').checked)?localStorage:sessionStorage).setItem('gh',token);
+  $('#tok').value=''; enter();
+};
+$('#tok').addEventListener('keydown',e=>{if(e.key==='Enter')$('#go').click()});
+$('#out').onclick=()=>{if(dirty&&!confirm('Есть несохранённые изменения. Выйти?'))return;sessionStorage.removeItem('gh');localStorage.removeItem('gh');location.reload()};
+$('#save').onclick=save;
+$('#add').onclick=()=>{
+  data.items.push({id:'item-'+Date.now().toString(36),name:'Новый товар',fandom:'',type:'',qty:0,price:0,size:'',material:'',image:''});
+  setDirty(true); render(); const last=$('#grid').lastElementChild; last.scrollIntoView({behavior:'smooth',block:'center'}); last.querySelector('input[type=text]').focus();
+};
+$('#q').addEventListener('input',e=>{const v=e.target.value.toLowerCase();document.querySelectorAll('.card').forEach(c=>c.hidden=!!v&&!c.dataset.name.includes(v))});
+$('#bell').onclick=openAlerts;
+$('#dx').onclick=()=>$('#dlg').close();
+$('#clr').onclick=()=>{activeRows().filter(r=>!r.low).forEach(r=>{r.e.ack=true;r.e.ackQty=r.q});sync();setDirty(true);bell();renderAlerts();msg('Не забудьте нажать «Сохранить».')};
+if(token) enter();
+</script>
+</body>
+</html>
