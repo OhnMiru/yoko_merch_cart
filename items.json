@@ -16,12 +16,19 @@
       "name": "Новый товар",
       "fandom": "ясгу",
       "type": "Стикерпаки",
-      "qty": 3,
+      "qty": 1,
       "price": 5,
       "size": "10",
       "material": "Бумага",
       "image": "images/item-mvtsrpbn.webp",
       "film": "Сердечки"
     }
-  ]
+  ],
+  "alerts": {
+    "item-mvtsrpbn": {
+      "since": "2026-10-30",
+      "from": 1,
+      "ack": false
+    }
+  }
 }
